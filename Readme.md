@@ -167,7 +167,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/pagnihotry/siwago"
+    "github.com/remixlabs/siwago"
 )
 
 const KID = "3UHT5POLK9"
