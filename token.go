@@ -163,11 +163,11 @@ func ValidateIdTokenWithNonce(aud string, idToken string, nonce string) (*SiwaId
 	var decodedSignature []byte
 	decodedSignature, err = base64UrlDecode(parts[2])
 	if err != nil {
-		reason = reason + fmt.Sprintf(" signature_base64_decode_failed [%s] ", err)
+		reason = fmt.Sprintf("%s signature_base64_decode_failed [%s] ", reason, err)
 		valid = false
 	} else {
 		if err := verifyAppleRSA256(parts[0]+"."+parts[1], decodedSignature, jwtHeader.Kid); err != nil {
-			reason = reason + fmt.Sprintf(" signature_verification_failed [%s] ", err)
+			reason = fmt.Sprintf("%s signature_verification_failed [%s] ", reason, err)
 			valid = false
 		}
 	}
