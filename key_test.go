@@ -5,17 +5,25 @@ import "testing"
 func TestAppleKeys(t *testing.T) {
 
 	//multiple keys from apple
-	kids := []string{"86D88Kf", "eXaunmL"}
+	kids := []string{"W6WcOKB", "fh6Bs8C"}
 
 	for _, kid := range kids {
 		t.Logf("Testing kid=%s", kid)
 		//check for the apple key object
-		applekey := getApplePublicKey(kid)
+		applekey, err := getApplePublicKey(kid)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
 		if applekey.Kid != kid {
 			t.Errorf("Invalid Key " + kid)
 		}
 		//check RSA object
-		key := getApplePublicKeyObject(kid, "RS256")
+		key, err := getApplePublicKeyObject(kid, "RS256")
+		if err != nil {
+			t.Error(err)
+			continue
+		}
 		if key.N == nil {
 			t.Errorf("Invalid Key " + kid)
 		}
