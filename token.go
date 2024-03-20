@@ -25,11 +25,32 @@ type JWTTokenBody struct {
 	Sub            string `json:"sub"`
 	AtHash         string `json:"at_hash"`
 	Email          string `json:"email"`
-	EmailVerified  string `json:"email_verified"`
+	EmailVerified  bool   `json:"email_verified"`
 	IsPrivateEmail string `json:"is_private_email"`
 	RealUserStatus int64  `json:"real_user_status"`
 	AuthTime       int64  `json:"auth_time"`
 	Nonce          string `json:"nonce"`
+}
+
+// struct for unmarshaling JWT Body: note the different type for EmailVerified
+//
+// This works around Apple's bizarre API where "email_verified" is allowed to
+// be either a string or a bool.
+//
+// https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/authenticating_users_with_sign_in_with_apple
+type serializedJWTTokenBody struct {
+	Iss            string      `json:"iss"`
+	Iat            int64       `json:"iat"`
+	Exp            int64       `json:"exp"`
+	Aud            string      `json:"aud"`
+	Sub            string      `json:"sub"`
+	AtHash         string      `json:"at_hash"`
+	Email          string      `json:"email"`
+	EmailVerified  StringyBool `json:"email_verified"`
+	IsPrivateEmail string      `json:"is_private_email"`
+	RealUserStatus int64       `json:"real_user_status"`
+	AuthTime       int64       `json:"auth_time"`
+	Nonce          string      `json:"nonce"`
 }
 
 //struct to hold the decoded idtoken
@@ -124,10 +145,26 @@ func ValidateIdTokenWithNonce(aud string, idToken string, nonce string) (*SiwaId
 	if err != nil {
 		return siwaIdToken, "invalid_format_body_base64_decode_failed error:" + err.Error()
 	}
-	var jwtBody JWTTokenBody
-	err = json.Unmarshal(jsonBodyB, &jwtBody)
+
+	// Two-step deserialization to handle the maybe-bool-maybe-string EmailVerified field
+	var parsedJWTBody serializedJWTTokenBody
+	err = json.Unmarshal(jsonBodyB, &parsedJWTBody)
 	if err != nil {
 		return siwaIdToken, "invalid_format_body_json_decode_failed error:" + err.Error()
+	}
+	jwtBody := &JWTTokenBody{
+		Iss:            parsedJWTBody.Iss,
+		Iat:            parsedJWTBody.Iat,
+		Exp:            parsedJWTBody.Exp,
+		Aud:            parsedJWTBody.Aud,
+		Sub:            parsedJWTBody.Sub,
+		AtHash:         parsedJWTBody.AtHash,
+		Email:          parsedJWTBody.Email,
+		EmailVerified:  bool(parsedJWTBody.EmailVerified),
+		IsPrivateEmail: parsedJWTBody.IsPrivateEmail,
+		RealUserStatus: parsedJWTBody.RealUserStatus,
+		AuthTime:       parsedJWTBody.AuthTime,
+		Nonce:          parsedJWTBody.Nonce,
 	}
 
 	//the basic validation tests pass. Now check if the contents of token are valid
@@ -174,7 +211,7 @@ func ValidateIdTokenWithNonce(aud string, idToken string, nonce string) (*SiwaId
 
 	//set the values of parsed token into the id token object
 	siwaIdToken.Header = &jwtHeader
-	siwaIdToken.Body = &jwtBody
+	siwaIdToken.Body = jwtBody
 	siwaIdToken.Valid = valid
 	siwaIdToken.Signature = decodedSignature
 
