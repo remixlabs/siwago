@@ -26,7 +26,7 @@ type JWTTokenBody struct {
 	AtHash         string `json:"at_hash"`
 	Email          string `json:"email"`
 	EmailVerified  bool   `json:"email_verified"`
-	IsPrivateEmail string `json:"is_private_email"`
+	IsPrivateEmail bool   `json:"is_private_email"`
 	RealUserStatus int64  `json:"real_user_status"`
 	AuthTime       int64  `json:"auth_time"`
 	Nonce          string `json:"nonce"`
@@ -47,7 +47,7 @@ type serializedJWTTokenBody struct {
 	AtHash         string      `json:"at_hash"`
 	Email          string      `json:"email"`
 	EmailVerified  StringyBool `json:"email_verified"`
-	IsPrivateEmail string      `json:"is_private_email"`
+	IsPrivateEmail StringyBool `json:"is_private_email"`
 	RealUserStatus int64       `json:"real_user_status"`
 	AuthTime       int64       `json:"auth_time"`
 	Nonce          string      `json:"nonce"`
@@ -146,7 +146,7 @@ func ValidateIdTokenWithNonce(aud string, idToken string, nonce string) (*SiwaId
 		return siwaIdToken, "invalid_format_body_base64_decode_failed error:" + err.Error()
 	}
 
-	// Two-step deserialization to handle the maybe-bool-maybe-string EmailVerified field
+	// Two-step deserialization to handle the maybe-bool-maybe-string EmailVerified and IsPrivateEmail fields
 	var parsedJWTBody serializedJWTTokenBody
 	err = json.Unmarshal(jsonBodyB, &parsedJWTBody)
 	if err != nil {
@@ -161,7 +161,7 @@ func ValidateIdTokenWithNonce(aud string, idToken string, nonce string) (*SiwaId
 		AtHash:         parsedJWTBody.AtHash,
 		Email:          parsedJWTBody.Email,
 		EmailVerified:  bool(parsedJWTBody.EmailVerified),
-		IsPrivateEmail: parsedJWTBody.IsPrivateEmail,
+		IsPrivateEmail: bool(parsedJWTBody.IsPrivateEmail),
 		RealUserStatus: parsedJWTBody.RealUserStatus,
 		AuthTime:       parsedJWTBody.AuthTime,
 		Nonce:          parsedJWTBody.Nonce,
